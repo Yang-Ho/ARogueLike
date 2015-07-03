@@ -1,5 +1,5 @@
 CC = g++
-LINK = -lncurses
+LINK = -lcurses
 
 all: 
-	$(CC) $(LINK) $(FILE).cpp -o $(FILE)
+	$(CC) $(LINK) $(FILE).cpp -o $(FILE).o
