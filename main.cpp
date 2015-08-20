@@ -1,18 +1,31 @@
+#include "config.h"
+#include "level.h"
+
 #include <curses.h>
 #include <vector>
 #include <string>
 
 using namespace::std;
 
-int screenWidth = 80;
-int screenHeight = 24;
+void updateMessages(WINDOW *msgWin, const vector<string> &msgs);
+void updateInfo(WINDOW *infoWin, const int a);
+void updateMap(WINDOW * mapWin, const vector< vector<char> > &map);
 
 int main() {
-    int gameover = 0;
+    int gameState = 0;
 
     WINDOW * mapWindow;
     WINDOW * messageWindow;
     WINDOW * infoWindow;
+
+    vector< vector<int> > levelLayout(100, vector<int>(60, 0));
+    for (int i = 0; i < 100; i++) {
+        for (int j = 0; j < 60; j++) {
+            if (i == 0 || j == 0 || i == 99 || j == 59)
+                levelLayout[i][j] = 1;
+        }
+    }
+    Level currLevel(100, 60, levelLayout);
 
     initscr();
     start_color();
@@ -21,104 +34,58 @@ int main() {
     noecho();
 
     int input;
-    int playerX, playerY;
 
-    int mapWidth, mapHeight;
-    int messageWidth, messageHeight;
-    int infoWidth, infoHeight;
-
-    mapWidth = 60;
-    mapHeight = 20;
-    messageWidth = 60;
-    messageHeight = 4;
-    infoWidth = 20;
-    infoHeight = 24;
-
-    mapWindow = newwin(mapHeight, mapWidth, 0, 0);
-    messageWindow = newwin(messageHeight, messageWidth, mapHeight, 0);
-    infoWindow = newwin(infoHeight, infoWidth, 0, mapWidth);
-
-    playerX = mapWidth / 2;
-    playerY = mapHeight / 2;
+    mapWindow = newwin(view::map.height, view::map.width, 0, 0);
+    messageWindow = newwin(view::message.height, view::message.width, view::map.height, 0);
+    infoWindow = newwin(view::info.height, view::info.width, 0, view::map.width);
     
-    box(mapWindow,0,0);
-    wborder(mapWindow, '*','*','*','*','*','*','*','*');
-    mvwaddch(mapWindow, playerY, playerX, '@');
-
-    box(messageWindow,0,0);
-    wborder(messageWindow, '=','=','=','=','=','=','=','=');
-
     box(infoWindow,0,0);
-    wborder(infoWindow, '+','+','+','+','+','+','+','+');
-    refresh();
-    wrefresh(mapWindow);
-    wrefresh(messageWindow);
-    wrefresh(infoWindow);
 
-    move(playerY, playerX);
+    refresh();
 
     vector<string> messages;
 
-    while(gameover == 0) {
+    currLevel.drawLevel(mapWindow);
+    updateMessages(messageWindow, messages);
+    wrefresh(infoWindow);
+
+
+    while(gameState != -1) {
         // Get input
         input = getch();
         if (input == 'q') {
-            gameover = 1;
+            gameState = -1;
+            messages.push_back("Quitting game");
+        } else {
+            // Move player
+            gameState = currLevel.update(input, messages);
         }
 
-        // Move player
-        wborder(mapWindow, '*','*','*','*','*','*','*','*');
-        mvwaddch(mapWindow, playerY, playerX, '.');
-        switch(input) {
-            case 'w':
-                playerY--;
-                messages.push_back("Moved up!");
-                break;
-            case 's':
-                playerY++;
-                messages.push_back("Moved down!");
-                break;
-            case 'a':
-                playerX--;
-                messages.push_back("Moved left!");
-                break;
-            case 'd':
-                playerX++;
-                messages.push_back("Moved right!");
-                break;
-        }
-        if (playerY < 0)
-            playerY = 0;
-        else if (playerY > mapHeight - 1)
-            playerY = mapHeight - 1;
-        if (playerX < 0)
-            playerX = 0;
-        else if (playerX > mapWidth - 1)
-            playerX = mapWidth - 1;
-       
-        // Update messages 
-        int size = messages.size();
-        for (int i = 0; i < 4; i++) {
-            int index;
-            if (i < size)
-                index = size - 1 - i;
-            else
-                break;
-            wmove(messageWindow, 3 - i, 0);
-            wclrtoeol(messageWindow);
-            mvwprintw(messageWindow, 3 - i, 0, "Character action: %s", messages[index].c_str());
-        }
+        // Update messages
+        updateMessages(messageWindow, messages);
 
         // Update map
-        mvwaddch(mapWindow, playerY, playerX, '@');
-        move(playerY, playerX);
-
-        wrefresh(mapWindow);
-        wrefresh(messageWindow);
+        currLevel.drawLevel(mapWindow);
     }
+    getch();
     delwin(mapWindow); 
     delwin(messageWindow); 
     delwin(infoWindow); 
     endwin();
     return 0;
+}
+
+void updateMessages(WINDOW *msgWin, const vector<string> &msgs) {
+    int size = msgs.size();
+    for (int i = 0; i < 4; i++) {
+        int index;
+        if (i < size)
+            index = size - 1 - i;
+        else
+            break;
+        wmove(msgWin, 3 - i, 0);
+        wclrtoeol(msgWin);
+        mvwprintw(msgWin, 3 - i, 0, "Character action: %s", msgs[index].c_str());
+    }
+    wrefresh(msgWin);
 }
