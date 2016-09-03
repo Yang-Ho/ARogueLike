@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "player.h"
+#include "monster.h"
 
 #include <curses.h>
 #include <vector>
@@ -11,11 +12,27 @@
 
 using namespace::std;
 
+enum class PlayerAction {
+    move,
+    attack,
+    bump_wall,
+    invalid
+};
+
+bool MonsterAtLoc(int X, int Y, Monster m) {
+    if (m.getX() == X && m.getY() == Y) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 class Level {
     private:
         int width, height;
         vector< vector<int> > layout;
         Player player;
+        vector< Monster > monsters; 
     public:
         Level() {
             width = 100;
@@ -38,10 +55,15 @@ class Level {
         int getWidth() { return width; }
         int getHeight() { return height; }
         int getTile(int x, int y) { return layout[x][y]; }
+
         void drawLevel(WINDOW *mapWin);
         void drawLevelIterator1();
         void updateLayout();
-        string movePlayer(char input);
+
+        void generateMonsters();
+
+        string playerAction(char input);
+
         int update(char input, vector<string> &msgs);
 };
 
@@ -58,6 +80,8 @@ void Level::drawLevel(WINDOW *mapWin) {
                         mvwaddch(mapWin, y, x, '#');
                     else if (layout[xCoord][yCoord] == 2)
                         mvwaddch(mapWin, y, x, '@');
+                    else if (layout[xCoord][yCoord] == 3)
+                        mvwaddch(mapWin, y, x, 'M');
                 } else {
                     mvwaddch(mapWin, y, x, ' ');
                 }
@@ -78,51 +102,184 @@ void Level::drawLevelIterator1() {
     }
 }
 
-string Level::movePlayer(char input) {
+void Level::generateMonsters() {
+    monsters.push_back(Monster(30,30,10));
+    for (vector< Monster >::iterator it = monsters.begin(); it != monsters.end(); ++it) {
+        layout[it->getX()][it->getY()] = 3;
+    }
+}
+
+string Level::playerAction(char input) {
     string message;
     layout[player.getX()][player.getY()] = 0;
+    char direction = 0;
+    PlayerAction action;
+    int new_loc;
     switch(input) {
-        case 'w':
-            if (layout[player.getX()][player.getY() - 1] == 0) {
-                player.moveUp();
-                message = "Moved up!";
-            } else {
-                message = "Bumped into wall!";
-                player.dealDamage(1);
+        case 'k':
+            new_loc = layout[player.getX()][player.getY() - 1];
+            if (new_loc == 0) {
+                action = PlayerAction::move;
+            } else if (new_loc == 1) {
+                action = PlayerAction::bump_wall;
+            } else if (new_loc == 3) {
+                action = PlayerAction::attack;
             }
             break;
-        case 's':
-            if (layout[player.getX()][player.getY() + 1] == 0) {
-                player.moveDown();
-                message = "Moved down!";
-            } else {
-                message = "Bumped into wall!";
+        case 'j':
+            new_loc = layout[player.getX()][player.getY() + 1];
+            if (new_loc == 0) {
+                action = PlayerAction::move;
+            } else if (new_loc == 1) {
+                action = PlayerAction::bump_wall;
+            } else if (new_loc == 3) {
+                action = PlayerAction::attack;
             }
             break;
-        case 'a':
-            if (layout[player.getX() - 1][player.getY()] == 0) {
-                player.moveLeft();
-                message = "Moved left!";
-            } else {
-                message = "Bumped into wall!";
+        case 'h':
+            new_loc = layout[player.getX() - 1][player.getY()];
+            if (new_loc == 0) {
+                action = PlayerAction::move;
+            } else if (new_loc == 1) {
+                action = PlayerAction::bump_wall;
+            } else if (new_loc == 3) {
+                action = PlayerAction::attack;
             }
             break;
-        case 'd':
-            if (layout[player.getX() + 1][player.getY()] == 0) {
-                player.moveRight();
-                message = "Moved right!";
-            } else {
-                message = "Bumped into wall!";
+        case 'l': 
+            new_loc = layout[player.getX() + 1][player.getY()];
+            if (new_loc == 0) {
+                action = PlayerAction::move;
+            } else if (new_loc == 1) {
+                action = PlayerAction::bump_wall;
+            } else if (new_loc == 3) {
+                action = PlayerAction::attack;
             }
+            break;
+        case 'y': 
+            new_loc = layout[player.getX() - 1][player.getY() - 1];
+            if (new_loc == 0) {
+                action = PlayerAction::move;
+            } else if (new_loc == 1) {
+                action = PlayerAction::bump_wall;
+            } else if (new_loc == 3) {
+                action = PlayerAction::attack;
+            }
+            break;
+        case 'u': 
+            new_loc = layout[player.getX() + 1][player.getY() - 1];
+            if (new_loc == 0) {
+                action = PlayerAction::move;
+            } else if (new_loc == 1) {
+                action = PlayerAction::bump_wall;
+            } else if (new_loc == 3) {
+                action = PlayerAction::attack;
+            }
+            break;
+        case 'b': 
+            new_loc = layout[player.getX() - 1][player.getY() + 1];
+            if (new_loc == 0) {
+                action = PlayerAction::move;
+            } else if (new_loc == 1) {
+                action = PlayerAction::bump_wall;
+            } else if (new_loc == 3) {
+                action = PlayerAction::attack;
+            }
+            break;
+        case 'n': 
+            new_loc = layout[player.getX() + 1][player.getY() + 1];
+            if (new_loc == 0) {
+                action = PlayerAction::move;
+            } else if (new_loc == 1) {
+                action = PlayerAction::bump_wall;
+            } else if (new_loc == 3) {
+                action = PlayerAction::attack;
+            }
+            break;
+        default:
+            action = PlayerAction::invalid;
             break;
     }
+
+    if (action == PlayerAction::move) {
+        switch(input) {
+            case 'k':
+                player.moveUp();
+                message = "Moved up!";
+                break;
+            case 'j':
+                player.moveDown();
+                message = "Moved down!";
+                break;
+            case 'h':
+                player.moveLeft();
+                message = "Moved left!";
+                break;
+            case 'l': 
+                player.moveRight();
+                message = "Moved right!";
+                break;
+            case 'y': 
+                player.moveLeft();
+                player.moveUp();
+                message = "Moved up left!";
+                break;
+            case 'u': 
+                player.moveRight();
+                player.moveUp();
+                message = "Moved up right!";
+                break;
+            case 'b': 
+                player.moveLeft();
+                player.moveDown();
+                message = "Moved down left!";
+                break;
+            case 'n': 
+                player.moveRight();
+                player.moveDown();
+                message = "Moved down right!";
+                break;
+            default:
+                message = "Unknown command";
+                break;
+        }
+    } else if (action == PlayerAction::bump_wall) {
+        message = "Bumped into wall!";
+    } else if (action == PlayerAction::attack) {
+        switch(input) {
+            case 'k':
+                vector< Monster >::iterator target = find_if(monsters.begin(), monsters.end(), MonsterAtLoc(player.getX(), player.getY() - 1));
+                if (target != monsters.end()) {
+                    message = "Attacked monster!";
+                }
+                break;
+            case 'j':
+                break;
+            case 'h':
+                break;
+            case 'l': 
+                break;
+            case 'y': 
+                break;
+            case 'u': 
+                break;
+            case 'b': 
+                break;
+            case 'n': 
+                break;
+            default:
+                message = "Unknown command";
+                break;
+        }
+    }
+
     layout[player.getX()][player.getY()] = 2;
     return message;
 }
 
 int Level::update(char input, vector<string> &msgs) {
     int gameState = 0;
-    msgs.push_back(movePlayer(input));
+    msgs.push_back(playerAction(input));
     if (player.getHealth() <= 0) {
         gameState = -1;
         msgs.push_back("Player died!");

@@ -1,9 +1,6 @@
 #ifndef PLAYER_H_
 #define PLAYER_H_
 
-#include "config.h"
-#include "level.h"
-
 class Player {
     private:
         int x, y;

@@ -1,9 +1,10 @@
 CC = g++
 LINK = -lncurses
+STD = -std=c++11
 
 all: 
-	$(CC) $(LINK) $(FILE).cpp -o $(FILE).o
+	$(CC) $(STD) $(LINK) $(FILE).cpp -o $(FILE).o
 profile:
-	$(CC) $(LINK) -pg $(FILE).cpp -o $(FILE).o
+	$(CC) $(STD) $(LINK) -pg $(FILE).cpp -o $(FILE).o
 game:
-	$(CC) $(LINK) main.cpp config.cpp -o bin/Game 
+	$(CC) $(STD) $(LINK) main.cpp config.cpp rng.cpp monster.cpp -o bin/Game 

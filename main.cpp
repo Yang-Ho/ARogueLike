@@ -1,9 +1,12 @@
 #include "config.h"
 #include "level.h"
+#include "rng.h"
 
 #include <curses.h>
 #include <vector>
 #include <string>
+#include <iostream>
+#include <ctime>
 
 using namespace::std;
 
@@ -11,7 +14,10 @@ void updateMessages(WINDOW *msgWin, const vector<string> &msgs);
 void updateInfo(WINDOW *infoWin, const int a);
 void updateMap(WINDOW * mapWin, const vector< vector<char> > &map);
 
+RNG rng (time(0));
+
 int main() {
+
     int gameState = 0;
 
     WINDOW * mapWindow;
@@ -26,7 +32,9 @@ int main() {
         }
     }
     Level currLevel(100, 60, levelLayout);
+    currLevel.generateMonsters();
 
+    getch();
     initscr();
     start_color();
     raw();
@@ -48,7 +56,6 @@ int main() {
     currLevel.drawLevel(mapWindow);
     updateMessages(messageWindow, messages);
     wrefresh(infoWindow);
-
 
     while(gameState != -1) {
         // Get input
