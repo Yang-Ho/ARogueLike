@@ -9,6 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <algorithm>
 
 using namespace::std;
 
@@ -19,13 +20,13 @@ enum class PlayerAction {
     invalid
 };
 
-bool MonsterAtLoc(int X, int Y, Monster m) {
-    if (m.getX() == X && m.getY() == Y) {
-        return true;
-    } else {
-        return false;
-    }
-}
+struct MonsterAtLoc{
+    private:
+        int x, y;
+    public:
+    explicit MonsterAtLoc(int X, int Y) {x=X; y=Y;}
+    inline bool operator()(const Monster& m) { return (m.getX() == x && m.getY() == y);}
+};
 
 class Level {
     private:
@@ -246,26 +247,55 @@ string Level::playerAction(char input) {
     } else if (action == PlayerAction::bump_wall) {
         message = "Bumped into wall!";
     } else if (action == PlayerAction::attack) {
+        vector< Monster >::iterator target;
         switch(input) {
             case 'k':
-                vector< Monster >::iterator target = find_if(monsters.begin(), monsters.end(), MonsterAtLoc(player.getX(), player.getY() - 1));
+                target = find_if(monsters.begin(), monsters.end(), MonsterAtLoc(player.getX(), player.getY() - 1));
                 if (target != monsters.end()) {
                     message = "Attacked monster!";
                 }
                 break;
             case 'j':
+                target = find_if(monsters.begin(), monsters.end(), MonsterAtLoc(player.getX(), player.getY() + 1));
+                if (target != monsters.end()) {
+                    message = "Attacked monster!";
+                }
                 break;
             case 'h':
+                target = find_if(monsters.begin(), monsters.end(), MonsterAtLoc(player.getX() - 1, player.getY()));
+                if (target != monsters.end()) {
+                    message = "Attacked monster!";
+                }
                 break;
             case 'l': 
+                target = find_if(monsters.begin(), monsters.end(), MonsterAtLoc(player.getX() + 1, player.getY()));
+                if (target != monsters.end()) {
+                    message = "Attacked monster!";
+                }
                 break;
             case 'y': 
+                target = find_if(monsters.begin(), monsters.end(), MonsterAtLoc(player.getX() - 1, player.getY() - 1));
+                if (target != monsters.end()) {
+                    message = "Attacked monster!";
+                }
                 break;
             case 'u': 
+                target = find_if(monsters.begin(), monsters.end(), MonsterAtLoc(player.getX() + 1, player.getY() - 1));
+                if (target != monsters.end()) {
+                    message = "Attacked monster!";
+                }
                 break;
             case 'b': 
+                target = find_if(monsters.begin(), monsters.end(), MonsterAtLoc(player.getX() - 1, player.getY() + 1));
+                if (target != monsters.end()) {
+                    message = "Attacked monster!";
+                }
                 break;
             case 'n': 
+                target = find_if(monsters.begin(), monsters.end(), MonsterAtLoc(player.getX() + 1, player.getY() + 1));
+                if (target != monsters.end()) {
+                    message = "Attacked monster!";
+                }
                 break;
             default:
                 message = "Unknown command";

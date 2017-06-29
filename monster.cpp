@@ -21,10 +21,10 @@ Monster::Monster(int X, int Y, int H) {
 }
 
 // Getters
-int Monster::getX() { return x; }
-int Monster::getY() { return y; }
-int Monster::getHealth() { return health; }
-int Monster::getMaxHealth() { return MAX_HEALTH; }
+int Monster::getX() const { return x; }
+int Monster::getY() const { return y; }
+int Monster::getHealth() const { return health; }
+int Monster::getMaxHealth() const { return MAX_HEALTH; }
 
 void Monster::setCoord(int X, int Y) {
     x = X;

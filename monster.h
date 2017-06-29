@@ -10,9 +10,9 @@ class Monster {
         Monster(int X, int Y, int H);
         void setCoord(int X, int Y);
         void move();
-        int getX();
-        int getY();
-        int getHealth();
-        int getMaxHealth();
+        int getX() const;
+        int getY() const;
+        int getHealth() const;
+        int getMaxHealth() const;
 };
 #endif /* MONSTER_H */
