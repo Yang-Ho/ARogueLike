@@ -2,7 +2,9 @@
 #include "level.h"
 #include "rng.h"
 
-#include <curses.h>
+#include "libtcod.hpp"
+#include <SDL.h>
+
 #include <vector>
 #include <string>
 #include <iostream>
@@ -10,19 +12,17 @@
 
 using namespace::std;
 
-void updateMessages(WINDOW *msgWin, const vector<string> &msgs);
-void updateInfo(WINDOW *infoWin, const int a);
-void updateMap(WINDOW * mapWin, const vector< vector<char> > &map);
-
 RNG rng (time(0));
 
 int main() {
 
-    int gameState = 0;
+    // Tcod Initialization
+	bool fullscreen=false;
 
-    WINDOW * mapWindow;
-    WINDOW * messageWindow;
-    WINDOW * infoWindow;
+	TCOD_renderer_t renderer=TCOD_RENDERER_SDL2;
+	TCOD_key_t key = {TCODK_NONE,0};
+
+    int gameState = 0;
 
     vector< vector<int> > levelLayout(100, vector<int>(60, 0));
     for (int i = 0; i < 100; i++) {
@@ -31,68 +31,22 @@ int main() {
                 levelLayout[i][j] = 1;
         }
     }
-    Level currLevel(100, 60, levelLayout);
-    currLevel.generateMonsters();
-
-    getch();
-    initscr();
-    start_color();
-    raw();
-    keypad(stdscr, TRUE);
-    noecho();
-
-    int input;
-
-    mapWindow = newwin(view::map.height, view::map.width, 0, 0);
-    messageWindow = newwin(view::message.height, view::message.width, view::map.height, 0);
-    infoWindow = newwin(view::info.height, view::info.width, 0, view::map.width);
+    //Level currLevel(100, 60, levelLayout);
+    //currLevel.generateMonsters();
     
-    box(infoWindow,0,0);
 
-    refresh();
-
-    vector<string> messages;
-
-    currLevel.drawLevel(mapWindow);
-    updateMessages(messageWindow, messages);
-    wrefresh(infoWindow);
-
-    while(gameState != -1) {
-        // Get input
-        input = getch();
-        if (input == 'q') {
-            gameState = -1;
-            messages.push_back("Quitting game");
-        } else {
-            // Move player
-            gameState = currLevel.update(input, messages);
+    TCODConsole::initRoot(80,50,"libtcod C++ tutorial",false, renderer);
+    while ( !TCODConsole::isWindowClosed() ) {
+		// did the user hit a key ?
+        TCODConsole::root->clear();
+        TCODConsole::root->putChar(40,25,'@');
+        TCODConsole::flush();
+		TCODSystem::checkForEvent((TCOD_event_t)(TCOD_EVENT_KEY_PRESS),&key,NULL);
+        if ( key.c == 'q' ) {
+            TCOD_quit();
         }
-
-        // Update messages
-        updateMessages(messageWindow, messages);
-
-        // Update map
-        currLevel.drawLevel(mapWindow);
     }
-    getch();
-    delwin(mapWindow); 
-    delwin(messageWindow); 
-    delwin(infoWindow); 
-    endwin();
     return 0;
 }
 
-void updateMessages(WINDOW *msgWin, const vector<string> &msgs) {
-    int size = msgs.size();
-    for (int i = 0; i < 4; i++) {
-        int index;
-        if (i < size)
-            index = size - 1 - i;
-        else
-            break;
-        wmove(msgWin, 3 - i, 0);
-        wclrtoeol(msgWin);
-        mvwprintw(msgWin, 3 - i, 0, "Character action: %s", msgs[index].c_str());
-    }
-    wrefresh(msgWin);
-}
+//  [Last modified: 2019 08 24 at 12:05:18 MDT]

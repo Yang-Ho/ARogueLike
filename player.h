@@ -22,24 +22,17 @@ class Player {
             x = X;
             y = Y;
         }
-        void moveUp() {
-            y--;
-        }
-        void moveDown() {
-            y++;
-        }
-        void moveLeft() {
-            x--;
-        }
-        void moveRight() {
-            x++;
-        }
-        void dealDamage(int d) {
-            health -= d;
-        }
+        void moveUp() { y--; }
+        void moveDown() { y++; }
+        void moveLeft() { x--; }
+        void moveRight() { x++; }
+        void dealtDamage(int d) { health -= d; }
         int getX() { return x; }
         int getY() { return y; }
         int getHealth() { return health; }
         int getMaxHealth() { return MAX_HEALTH; }
+
+        int damageRoll() { return 2; }
 };
 #endif
+//  [Last modified: 2019 08 15 at 15:45:55 MDT]

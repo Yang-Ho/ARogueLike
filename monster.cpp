@@ -31,6 +31,11 @@ void Monster::setCoord(int X, int Y) {
     y = Y;
 }
 
+void Monster::dealtDamage(int dmg) {
+    health -= dmg;
+}
+
 void Monster::move() {
     int direction = rng.getRandomInt(0,4);
 }
+//  [Last modified: 2019 08 24 at 12:05:02 MDT]
